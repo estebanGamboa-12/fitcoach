@@ -100,6 +100,17 @@ export default function CoachScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Plan del cliente</Text>
+      <View style={styles.heroCard}>
+        <View>
+          <Text style={styles.heroTitle}>Modo app fit (local)</Text>
+          <Text style={styles.heroSubtitle}>
+            Ajusta entrenamientos, añade comentarios y asigna sesiones sin depender de la nube.
+          </Text>
+        </View>
+        <View style={styles.heroBadge}>
+          <Text style={styles.heroBadgeText}>Offline</Text>
+        </View>
+      </View>
       <View style={styles.summaryRow}>
         <View style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{plan?.workouts.length ?? 0}</Text>
@@ -194,7 +205,38 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: '700',
-    marginBottom: 16,
+    marginBottom: 12,
+  },
+  heroCard: {
+    backgroundColor: '#1C5D99',
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  heroTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  heroSubtitle: {
+    color: '#DCE8F5',
+    marginTop: 6,
+    fontSize: 12,
+  },
+  heroBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  heroBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
   },
   summaryRow: {
     flexDirection: 'row',
