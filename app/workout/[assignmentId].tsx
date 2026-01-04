@@ -128,6 +128,7 @@ export default function WorkoutPlayerScreen() {
               {item.sets}x{item.reps} · {item.restSeconds}s
             </Text>
           </View>
+          {item.notes ? <Text style={styles.itemNotes}>{item.notes}</Text> : null}
           {Array.from({ length: item.sets }, (_, index) => {
             const setNumber = index + 1;
             const values = draftSets[item.id]?.[setNumber] ?? { weight: '', reps: '', rpe: '' };
@@ -262,6 +263,12 @@ const styles = StyleSheet.create({
   itemMeta: {
     marginTop: 4,
     color: '#666',
+  },
+  itemNotes: {
+    marginBottom: 12,
+    color: '#475569',
+    fontSize: 13,
+    lineHeight: 18,
   },
   setRow: {
     flexDirection: 'row',

@@ -105,47 +105,89 @@ export default function WorkoutEditorScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Editar entrenamiento</Text>
-      <TextInput
-        style={styles.titleInput}
-        value={draft.title}
-        onChangeText={(text) => setDraft((prev) => (prev ? { ...prev, title: text } : prev))}
-        placeholder="Título"
-      />
+      <View style={styles.headerCard}>
+        <View>
+          <Text style={styles.title}>Editar entrenamiento</Text>
+          <Text style={styles.subtitle}>Personaliza ejercicios y deja comentarios para tu cliente.</Text>
+        </View>
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>Modo local</Text>
+        </View>
+      </View>
 
-      {draft.items.map((item) => (
+      <Text style={styles.sectionTitle}>Detalles</Text>
+      <View style={styles.sectionCard}>
+        <Text style={styles.fieldLabel}>Título</Text>
+        <TextInput
+          style={styles.titleInput}
+          value={draft.title}
+          onChangeText={(text) => setDraft((prev) => (prev ? { ...prev, title: text } : prev))}
+          placeholder="Título del entrenamiento"
+        />
+        <Text style={styles.fieldLabel}>Notas del entrenador</Text>
+        <TextInput
+          style={[styles.titleInput, styles.notesInput]}
+          value={draft.notes ?? ''}
+          multiline
+          onChangeText={(text) => setDraft((prev) => (prev ? { ...prev, notes: text } : prev))}
+          placeholder="Objetivo de la sesión, ajustes o cues técnicos"
+        />
+      </View>
+
+      <Text style={styles.sectionTitle}>Ejercicios</Text>
+      {draft.items.map((item, index) => (
         <View key={item.id} style={styles.itemCard}>
+          <View style={styles.itemHeader}>
+            <Text style={styles.itemIndex}>Ejercicio {index + 1}</Text>
+            <Pressable style={styles.removeButton} onPress={() => handleRemoveItem(item.id)}>
+              <Text style={styles.removeButtonText}>Eliminar</Text>
+            </Pressable>
+          </View>
           <TextInput
             style={styles.itemName}
             value={item.name}
             onChangeText={(text) => updateItem(item.id, { name: text })}
-            placeholder="Ejercicio"
+            placeholder="Nombre del ejercicio"
           />
           <View style={styles.row}>
-            <TextInput
-              style={styles.input}
-              value={String(item.sets)}
-              keyboardType="numeric"
-              onChangeText={(text) => updateItem(item.id, { sets: Number(text) || 0 })}
-              placeholder="Sets"
-            />
-            <TextInput
-              style={styles.input}
-              value={item.reps}
-              onChangeText={(text) => updateItem(item.id, { reps: text })}
-              placeholder="Reps"
-            />
-            <TextInput
-              style={styles.input}
-              value={String(item.restSeconds)}
-              keyboardType="numeric"
-              onChangeText={(text) => updateItem(item.id, { restSeconds: Number(text) || 0 })}
-              placeholder="Descanso"
-            />
+            <View style={styles.metricField}>
+              <Text style={styles.metricLabel}>Sets</Text>
+              <TextInput
+                style={styles.input}
+                value={String(item.sets)}
+                keyboardType="numeric"
+                onChangeText={(text) => updateItem(item.id, { sets: Number(text) || 0 })}
+                placeholder="4"
+              />
+            </View>
+            <View style={styles.metricField}>
+              <Text style={styles.metricLabel}>Reps</Text>
+              <TextInput
+                style={styles.input}
+                value={item.reps}
+                onChangeText={(text) => updateItem(item.id, { reps: text })}
+                placeholder="8-10"
+              />
+            </View>
+            <View style={styles.metricField}>
+              <Text style={styles.metricLabel}>Descanso</Text>
+              <TextInput
+                style={styles.input}
+                value={String(item.restSeconds)}
+                keyboardType="numeric"
+                onChangeText={(text) => updateItem(item.id, { restSeconds: Number(text) || 0 })}
+                placeholder="90"
+              />
+            </View>
           </View>
-          <Pressable style={styles.removeButton} onPress={() => handleRemoveItem(item.id)}>
-            <Text style={styles.removeButtonText}>Eliminar ejercicio</Text>
-          </Pressable>
+          <Text style={styles.fieldLabel}>Comentario</Text>
+          <TextInput
+            style={[styles.itemName, styles.notesInput]}
+            value={item.notes ?? ''}
+            onChangeText={(text) => updateItem(item.id, { notes: text })}
+            placeholder="Cues, técnica o variantes"
+            multiline
+          />
         </View>
       ))}
 
@@ -163,30 +205,101 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     paddingBottom: 40,
-    gap: 16,
+    gap: 18,
   },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 12,
+  },
+  headerCard: {
+    backgroundColor: '#1C5D99',
+    borderRadius: 20,
+    padding: 18,
+    gap: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
+    color: '#fff',
+  },
+  subtitle: {
+    marginTop: 4,
+    color: '#DCE8F5',
+  },
+  badge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1C2330',
+  },
+  sectionCard: {
+    backgroundColor: '#F8F9FB',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#E3E5E8',
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    color: '#64748B',
+    letterSpacing: 0.6,
   },
   titleInput: {
-    backgroundColor: '#F4F5F7',
+    backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
     fontWeight: '600',
+    borderWidth: 1,
+    borderColor: '#E3E5E8',
+  },
+  notesInput: {
+    minHeight: 64,
+    textAlignVertical: 'top',
   },
   itemCard: {
-    backgroundColor: '#F8F9FB',
+    backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
     gap: 12,
+    borderWidth: 1,
+    borderColor: '#E3E5E8',
+    shadowColor: '#1F2A37',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  itemIndex: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
   itemName: {
     backgroundColor: '#fff',
@@ -200,8 +313,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  input: {
+  metricField: {
     flex: 1,
+    gap: 6,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  input: {
     backgroundColor: '#fff',
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -210,11 +331,15 @@ const styles = StyleSheet.create({
     borderColor: '#E3E5E8',
   },
   removeButton: {
-    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 999,
   },
   removeButtonText: {
-    color: '#C0392B',
+    color: '#B91C1C',
     fontWeight: '600',
+    fontSize: 12,
   },
   primaryButton: {
     backgroundColor: '#1C5D99',
