@@ -4,18 +4,29 @@ import {
   Alert,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 import { addDays, formatDate, formatDateLabel } from '@/src/lib/date';
 import { exportJSON, importJSON } from '@/src/lib/importExport';
 import { getState, resetState, setState, updatePlan } from '@/src/lib/storage';
 import { LocalState, Plan } from '@/src/lib/types';
+import {
+  Card,
+  DangerButton,
+  Screen,
+  SecondaryButton,
+  SectionHeader,
+  colors,
+  radius,
+  spacing,
+  typography,
+} from '@/src/ui';
 
 export default function CoachScreen() {
   const [state, setLocalState] = useState<LocalState | null>(null);
@@ -91,17 +102,17 @@ export default function CoachScreen() {
 
   if (!state) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
+      <Screen scroll={false} style={styles.centered} padding={false}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </Screen>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <Screen>
       <Text style={styles.title}>Plan del cliente</Text>
-      <View style={styles.heroCard}>
-        <View>
+      <Card style={styles.heroCard}>
+        <View style={styles.heroContent}>
           <Text style={styles.heroTitle}>Modo app fit (local)</Text>
           <Text style={styles.heroSubtitle}>
             Ajusta entrenamientos, añade comentarios y asigna sesiones sin depender de la nube.
@@ -110,65 +121,74 @@ export default function CoachScreen() {
         <View style={styles.heroBadge}>
           <Text style={styles.heroBadgeText}>Offline</Text>
         </View>
-      </View>
+      </Card>
+
       <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
+        <Card style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{plan?.workouts.length ?? 0}</Text>
           <Text style={styles.summaryLabel}>Entrenamientos</Text>
-        </View>
-        <View style={styles.summaryCard}>
+        </Card>
+        <Card style={styles.summaryCard}>
           <Text style={styles.summaryValue}>{plan?.assignments.length ?? 0}</Text>
           <Text style={styles.summaryLabel}>Asignaciones</Text>
-        </View>
+        </Card>
       </View>
 
-      <Text style={styles.sectionTitle}>Asignaciones próximas</Text>
+      <SectionHeader title="Plan semanal" />
       <View style={styles.list}>
         {upcomingDates.map(({ date, key }) => {
           const assignment = plan?.assignments.find((item) => item.scheduledDate === key);
           const workout = plan?.workouts.find((item) => item.id === assignment?.workoutId);
           return (
-            <Pressable
-              key={key}
-              style={styles.assignmentCard}
-              onPress={() => setSelectedDate(key)}>
-              <View>
-                <Text style={styles.assignmentDate}>{formatDateLabel(date)}</Text>
-                <Text style={styles.assignmentWorkout}>{workout?.title ?? 'Sin asignar'}</Text>
-              </View>
-              <Text style={styles.assignmentCta}>Cambiar</Text>
+            <Pressable key={key} style={styles.cardPressable} onPress={() => setSelectedDate(key)}>
+              <Card style={styles.assignmentCard}>
+                <View style={styles.assignmentRow}>
+                  <View>
+                    <Text style={styles.assignmentDate}>{formatDateLabel(date)}</Text>
+                    <Text style={styles.assignmentWorkout}>{workout?.title ?? 'Sin asignar'}</Text>
+                  </View>
+                  <View style={styles.assignmentAction}>
+                    <Text style={styles.assignmentCta}>Cambiar</Text>
+                    <FontAwesome name="chevron-right" size={14} color={colors.textMuted} />
+                  </View>
+                </View>
+              </Card>
             </Pressable>
           );
         })}
       </View>
 
-      <Text style={styles.sectionTitle}>Entrenamientos</Text>
+      <SectionHeader title="Rutinas" />
       <View style={styles.list}>
         {plan?.workouts.map((workout) => (
           <Pressable
             key={workout.id}
-            style={styles.workoutCard}
+            style={styles.cardPressable}
             onPress={() => router.push(`/coach/workout-editor/${workout.id}`)}>
-            <View>
-              <Text style={styles.workoutTitle}>{workout.title}</Text>
-              <Text style={styles.workoutMeta}>{workout.items.length} ejercicios</Text>
-            </View>
-            <Text style={styles.assignmentCta}>Editar</Text>
+            <Card style={styles.workoutCard}>
+              <View style={styles.assignmentRow}>
+                <View>
+                  <Text style={styles.workoutTitle}>{workout.title}</Text>
+                  <Text style={styles.workoutMeta}>{workout.items.length} ejercicios</Text>
+                </View>
+                <View style={styles.assignmentAction}>
+                  <Text style={styles.assignmentCta}>Editar</Text>
+                  <FontAwesome name="chevron-right" size={14} color={colors.textMuted} />
+                </View>
+              </View>
+            </Card>
           </Pressable>
         ))}
       </View>
 
-      <View style={styles.buttonRow}>
-        <Pressable style={styles.secondaryButton} onPress={handleReset}>
-          <Text style={styles.secondaryButtonText}>Restablecer demo</Text>
-        </Pressable>
-        <Pressable style={styles.primaryButton} onPress={handleExport}>
-          <Text style={styles.primaryButtonText}>Exportar plan JSON</Text>
-        </Pressable>
-        <Pressable style={styles.primaryButton} onPress={handleImport}>
-          <Text style={styles.primaryButtonText}>Importar plan JSON</Text>
-        </Pressable>
-      </View>
+      <SectionHeader title="Herramientas" />
+      <Card style={styles.toolsCard}>
+        <View style={styles.toolsList}>
+          <SecondaryButton label="Exportar plan JSON" onPress={handleExport} />
+          <SecondaryButton label="Importar plan JSON" onPress={handleImport} />
+          <DangerButton label="Restablecer demo" onPress={handleReset} />
+        </View>
+      </Card>
 
       <Modal visible={selectedDate !== null} transparent animationType="slide">
         <View style={styles.modalBackdrop}>
@@ -182,153 +202,125 @@ export default function CoachScreen() {
                 <Text style={styles.modalOptionText}>{workout.title}</Text>
               </Pressable>
             ))}
-            <Pressable style={styles.modalCancel} onPress={() => setSelectedDate(null)}>
-              <Text style={styles.modalCancelText}>Cancelar</Text>
-            </Pressable>
+            <SecondaryButton label="Cancelar" onPress={() => setSelectedDate(null)} />
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700',
-    marginBottom: 12,
+    color: colors.textPrimary,
+    ...typography.title,
+    marginBottom: spacing.md,
   },
   heroCard: {
-    backgroundColor: '#1C5D99',
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 20,
+    backgroundColor: colors.surface,
+    borderColor: colors.borderDark,
+    marginBottom: spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 12,
+    gap: spacing.md,
   },
   heroTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
+    color: colors.textPrimary,
+    ...typography.section,
   },
   heroSubtitle: {
-    color: '#DCE8F5',
-    marginTop: 6,
-    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    ...typography.meta,
+  },
+  heroContent: {
+    flex: 1,
   },
   heroBadge: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
+    backgroundColor: colors.accentMuted,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.pill,
   },
   heroBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
+    color: colors.accent,
+    ...typography.meta,
   },
   summaryRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
+    gap: spacing.md,
+    marginBottom: spacing.lg,
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: '#F4F5F7',
-    padding: 16,
-    borderRadius: 16,
+    padding: spacing.lg,
   },
   summaryValue: {
+    color: colors.textOnCard,
     fontSize: 22,
     fontWeight: '700',
   },
   summaryLabel: {
-    color: '#666',
-    marginTop: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-    marginTop: 8,
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+    ...typography.meta,
   },
   list: {
-    gap: 12,
+    gap: spacing.md,
   },
-  assignmentCard: {
-    backgroundColor: '#F8F9FB',
-    borderRadius: 14,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  cardPressable: {
+    borderRadius: radius.lg,
   },
+  assignmentCard: {},
   assignmentDate: {
-    fontSize: 14,
-    color: '#666',
+    color: colors.textMuted,
+    ...typography.meta,
   },
   assignmentWorkout: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 6,
+    color: colors.textOnCard,
+    ...typography.section,
+    marginTop: spacing.xs,
   },
   assignmentCta: {
-    fontSize: 12,
+    color: colors.accent,
+    ...typography.meta,
     fontWeight: '600',
-    color: '#1C5D99',
   },
   workoutCard: {
-    backgroundColor: '#F4F5F7',
-    borderRadius: 14,
-    padding: 16,
+    padding: spacing.lg,
+  },
+  workoutTitle: {
+    color: colors.textOnCard,
+    ...typography.section,
+  },
+  workoutMeta: {
+    color: colors.textMuted,
+    marginTop: spacing.xs,
+    ...typography.meta,
+  },
+  assignmentRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: spacing.md,
   },
-  workoutTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  workoutMeta: {
-    color: '#666',
-    marginTop: 4,
-  },
-  buttonRow: {
-    marginTop: 24,
-    gap: 12,
-  },
-  primaryButton: {
-    backgroundColor: '#1C5D99',
-    paddingVertical: 12,
-    borderRadius: 12,
+  assignmentAction: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.xs,
   },
-  primaryButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+  toolsCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderDark,
   },
-  secondaryButton: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#1C5D99',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#1C5D99',
-    fontWeight: '600',
+  toolsList: {
+    gap: spacing.sm,
   },
   modalBackdrop: {
     flex: 1,
@@ -336,31 +328,24 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    gap: 12,
+    backgroundColor: colors.surface,
+    padding: spacing.lg,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    gap: spacing.sm,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    color: colors.textPrimary,
+    ...typography.section,
   },
   modalOption: {
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#F4F5F7',
-    paddingHorizontal: 12,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: colors.card,
+    paddingHorizontal: spacing.md,
   },
   modalOptionText: {
-    fontWeight: '600',
-  },
-  modalCancel: {
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  modalCancelText: {
-    color: '#1C5D99',
+    color: colors.textOnCard,
     fontWeight: '600',
   },
 });

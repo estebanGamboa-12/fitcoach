@@ -1,11 +1,22 @@
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
-import { formatDateLabel } from '@/src/lib/date';
+import { formatDate, formatDateLabel } from '@/src/lib/date';
 import { getState } from '@/src/lib/storage';
 import { LocalState } from '@/src/lib/types';
+import {
+  Card,
+  ListEmptyState,
+  Screen,
+  SecondaryButton,
+  SectionHeader,
+  colors,
+  spacing,
+  typography,
+} from '@/src/ui';
 
 export default function ClientHomeScreen() {
   const [state, setState] = useState<LocalState | null>(null);
@@ -25,97 +36,164 @@ export default function ClientHomeScreen() {
 
   if (!state) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
+      <Screen scroll={false} style={styles.centered} padding={false}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </Screen>
     );
   }
 
   const { plan } = state;
-  const assignments = [...plan.assignments].sort((a, b) =>
-    a.scheduledDate.localeCompare(b.scheduledDate)
+  const assignments = useMemo(
+    () =>
+      [...plan.assignments].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate)),
+    [plan.assignments]
   );
+  const todayKey = useMemo(() => formatDate(new Date()), []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Hola, {plan.client.name}</Text>
-      <Text style={styles.subtitle}>Semana</Text>
-      <View style={styles.list}>
-        {assignments.map((assignment) => {
-          const workout = plan.workouts.find((item) => item.id === assignment.workoutId);
-          const date = new Date(`${assignment.scheduledDate}T00:00:00`);
+    <Screen scroll={false} padding={false}>
+      <FlatList
+        data={assignments}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text style={styles.title}>Hola, {plan.client.name}</Text>
+            <Text style={styles.subtitle}>Sesiones asignadas</Text>
+            <SectionHeader title="Semana" />
+          </View>
+        }
+        ListEmptyComponent={
+          <ListEmptyState
+            message="No hay sesiones asignadas."
+            iconName="calendar-outline"
+          />
+        }
+        renderItem={({ item }) => {
+          const workout = plan.workouts.find((entry) => entry.id === item.workoutId);
+          const date = new Date(`${item.scheduledDate}T00:00:00`);
+          const isToday = item.scheduledDate === todayKey;
           return (
             <Pressable
-              key={assignment.id}
-              onPress={() => router.push(`/workout/${assignment.id}`)}
-              style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>{workout?.title ?? 'Entrenamiento'}</Text>
-                <Text style={styles.cardDate}>{formatDateLabel(date)}</Text>
-              </View>
-              <Text style={styles.cardSubtitle}>{workout?.notes ?? 'Sesión asignada'}</Text>
-              <View style={styles.ctaRow}>
-                <Text style={styles.cta}>Abrir sesión</Text>
-              </View>
+              onPress={() => router.push(`/workout/${item.id}`)}
+              style={styles.cardWrapper}>
+              <Card style={styles.card}>
+                <View style={styles.cardRow}>
+                  <View style={styles.cardContent}>
+                    <View style={styles.cardTitleRow}>
+                      <Text style={styles.cardTitle}>{workout?.title ?? 'Entrenamiento'}</Text>
+                      {isToday ? (
+                        <View style={styles.todayBadge}>
+                          <Text style={styles.todayBadgeText}>Hoy</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                    <Text style={styles.cardSubtitle}>
+                      {workout?.notes ?? 'Sesión asignada'}
+                    </Text>
+                    <View style={styles.cardMetaRow}>
+                      <View style={styles.dateChip}>
+                        <Text style={styles.dateChipText}>{formatDateLabel(date)}</Text>
+                      </View>
+                    </View>
+                  </View>
+                  <View style={styles.cardAction}>
+                    <SecondaryButton
+                      label="Abrir"
+                      size="sm"
+                      onPress={() => router.push(`/workout/${item.id}`)}
+                    />
+                    <FontAwesome name="chevron-right" size={16} color={colors.textMuted} />
+                  </View>
+                </View>
+              </Card>
             </Pressable>
           );
-        })}
-      </View>
-    </ScrollView>
+        }}
+      />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  listContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing['3xl'],
+    gap: spacing.md,
+  },
+  header: {
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 12,
+    color: colors.textPrimary,
+    ...typography.title,
   },
   subtitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
+    color: colors.textSecondary,
+    ...typography.body,
   },
-  list: {
-    gap: 12,
+  cardWrapper: {
+    borderRadius: 18,
   },
   card: {
-    backgroundColor: '#F4F5F7',
-    borderRadius: 16,
-    padding: 16,
+    padding: spacing.lg,
   },
-  cardHeader: {
+  cardRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  cardDate: {
-    fontSize: 12,
-    color: '#666',
+    color: colors.textOnCard,
+    ...typography.section,
   },
   cardSubtitle: {
-    marginTop: 8,
-    color: '#555',
+    marginTop: spacing.xs,
+    color: colors.textMuted,
+    ...typography.body,
   },
-  ctaRow: {
-    marginTop: 12,
-    alignItems: 'flex-end',
+  cardContent: {
+    flex: 1,
   },
-  cta: {
-    fontWeight: '600',
-    color: '#1C5D99',
+  cardTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  cardMetaRow: {
+    marginTop: spacing.sm,
+  },
+  dateChip: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 999,
+    backgroundColor: colors.cardMuted,
+  },
+  dateChipText: {
+    color: colors.textMuted,
+    ...typography.meta,
+  },
+  todayBadge: {
+    backgroundColor: colors.accentMuted,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: 999,
+  },
+  todayBadgeText: {
+    color: colors.accent,
+    ...typography.meta,
+  },
+  cardAction: {
+    alignItems: 'center',
+    gap: spacing.sm,
   },
 });

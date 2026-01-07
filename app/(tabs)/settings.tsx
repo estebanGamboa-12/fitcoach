@@ -1,10 +1,20 @@
 import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { exportJSON } from '@/src/lib/importExport';
 import { getState, resetState } from '@/src/lib/storage';
 import { LocalState } from '@/src/lib/types';
+import {
+  Card,
+  DangerButton,
+  PrimaryButton,
+  Screen,
+  SectionHeader,
+  colors,
+  spacing,
+  typography,
+} from '@/src/ui';
 
 export default function SettingsScreen() {
   const [state, setState] = useState<LocalState | null>(null);
@@ -37,77 +47,51 @@ export default function SettingsScreen() {
 
   if (!state) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
+      <Screen scroll={false} style={styles.centered} padding={false}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </Screen>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <Screen>
       <Text style={styles.title}>Ajustes</Text>
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>FitCoach (demo local)</Text>
-        <Text style={styles.cardBody}>Todo se guarda en este dispositivo usando AsyncStorage.</Text>
-      </View>
+      <Card
+        title="FitCoach (demo local)"
+        subtitle="Todo se guarda en este dispositivo usando AsyncStorage."
+        style={styles.infoCard}
+      />
 
-      <Pressable style={styles.primaryButton} onPress={handleExportLogs}>
-        <Text style={styles.primaryButtonText}>Exportar logs JSON</Text>
-      </Pressable>
-      <Pressable style={styles.secondaryButton} onPress={handleReset}>
-        <Text style={styles.secondaryButtonText}>Restablecer demo</Text>
-      </Pressable>
-    </ScrollView>
+      <SectionHeader title="Datos" />
+      <Card style={styles.toolsCard}>
+        <View style={styles.toolsList}>
+          <PrimaryButton label="Exportar logs JSON" onPress={handleExportLogs} />
+          <DangerButton label="Restablecer demo" onPress={handleReset} />
+        </View>
+      </Card>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-    paddingBottom: 40,
-    gap: 16,
-  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 26,
-    fontWeight: '700',
+    color: colors.textPrimary,
+    ...typography.title,
+    marginBottom: spacing.md,
   },
-  card: {
-    backgroundColor: '#F4F5F7',
-    padding: 16,
-    borderRadius: 16,
+  infoCard: {
+    marginBottom: spacing.lg,
   },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  toolsCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.borderDark,
   },
-  cardBody: {
-    marginTop: 6,
-    color: '#666',
-  },
-  primaryButton: {
-    backgroundColor: '#1C5D99',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: '#1C5D99',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#1C5D99',
-    fontWeight: '600',
+  toolsList: {
+    gap: spacing.sm,
   },
 });
